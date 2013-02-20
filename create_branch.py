@@ -29,6 +29,7 @@ opener.addheaders = [('Authorization', 'Basic ' + userHash)]
 response = json.load(opener.open(url))
 
 key = response['key']
-comment = response['fields']['summary'].split()[0:5]
+issueType = response['fields']['issuetype']['name']
+sprint = response['fields']['status']['name']
 
-createBranch(key+"-"+"-".join(comment))
+createBranch(issueType.lower + "/" + key)
