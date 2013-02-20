@@ -52,4 +52,4 @@ prompt> gitjira help
 In the current version, branches are created in format ```<issue type>/<ticket number>```. Await improvements!
 
 
-##### Special thanks to @mpitid for his help. 
+##### Special thanks to @mpitid (https://github.com/mpitid) for his help. 
