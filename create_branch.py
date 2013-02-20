@@ -19,7 +19,7 @@ if (len(sys.argv) < 2):
 	sys.exit(1)
 
 ticket = sys.argv[1]
-url = 'https://jiradatasift.atlassian.net/rest/api/2/issue/' + ticket
+url = config.base_url + '/rest/api/latest/issue/' + ticket
 
 
 userHash = base64.b64encode((config.username+":"+config.password).encode('ascii'))
@@ -28,7 +28,7 @@ opener.addheaders = [('Authorization', 'Basic ' + userHash)]
 
 response = json.load(opener.open(url))
 
-print response['fields']['summary']
-
 key = response['key']
-createBranch(key)
+comment = response['fields']['summary'].split()[0:5]
+
+createBranch(key+"-"+"-".join(comment))
