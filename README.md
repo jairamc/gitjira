@@ -5,26 +5,48 @@ Script to create a branch based on a Jira ticket
 
 Installation
 ---------------
-Clone the repo.
+#### Download
 
+##### Either clone the repo - 
 ```console
 git clone git@github.com:jairamc/git-jira.git 
 ```
 
-Create symlink so its available everywhere
+##### Or download latest tag
 ```console
-ln -s /usr/local/bin/create_branch <path-to-folder>/git-jira/create_branch.py
+tar -xvzf git-jira.tar.gz
+```
+or
+```console
+unzip git-jira.zip
+```
+
+#### Install the package
+
+##### Global install
+```console
+cd <path-to-code>
+python setup.py install
+```
+The last step needs to be run as root if you want to install PyTag for all users. If you prefer a local installation — which is recommended at present, since there is no simple way to uninstall it — you can instead run the following commands as a user:
+
+##### Local Install
+```console
+cd <path-to-code>
+python setup.py install --home=~/local
+```
+installing locally will require the below steps as well 
+
+```console
+export PATH=$PATH:$HOME/local/bin
+export PYTHONPATH=$HOME/local/lib/python
 ```
 
 
 Usage
 ---------------
-In the installed folder, you will find a config.py file. Update with user credentials. The ```base_url``` is url to your Jira installation. For eg. ```https://jira.atlassian.net```. This should be an ```https``` link.
-
-
-Run it from within your repo, i.e., you should be in the folder where you have your code.
-
+Run 
 ```console
-prompt> create_branch <ticket-number>
+prompt> gitjira help
 ```
-In the current version, it will fetch the ticket type and create a branch ```<issue type>/<ticket number>```. Await improvements!
+In the current version, branches are created in format ```<issue type>/<ticket number>```. Await improvements!
