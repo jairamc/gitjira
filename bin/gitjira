@@ -3,44 +3,76 @@
 import sys, os, getpass
 import gitjira
 
-from os.path import expanduser
-home = expanduser("~")
+from optparse import OptionParser
 
-def usage():
-	return "git-jira [help | <command> [<args>]]\n" + \
-	"Commands - \n" + \
-	"- create_branch <ticket_number>\n" + \
-	"- commit_branch\n"
+def main(args):
+	opts = parse_cli(args)
 
-confLocation = home + "/.config/gitjira"
-confFile = confLocation + "/config"
+	conf = gitjira.readValidateConfig(opts.config) if os.path.exists(opts.config) else\
+		   interactive_config(opts.config)
 
-if (not os.path.exists(confFile)):
-	sys.stdout.write("Configuration required to proceed. Create config? [y/n]")
-	proceed = raw_input().lower()
-	if (proceed != 'y'):
-		sys.exit(0)
+	if opts.create_branch:
+		gitjira.createBranch(opts.create_branch, conf)
 
-	if (not os.path.exists(confLocation)):
-		os.mkdir(confLocation)
-	sys.stdout.write("Username: ")
-	username = raw_input()
-	password = getpass.getpass("Password: ")
-	sys.stdout.write("Base Jira Url (eg. https://jira.atlassian.net): ")
-	baseUrl = raw_input()
+	if opts.commit_branch:
+		gitjira.commitBranch(conf)
 
-	userhash = gitjira.createUserHash(username, password)
+	return 0
 
-	f = open(confFile, 'w')
-	f.write("userhash=" + userhash + "\n")
-	f.write("base_url=" + baseUrl)
-	f.close()
 
-if (len(sys.argv) < 2 or sys.argv[1] == 'help'):
-	print usage()
-	sys.exit(1)
+def parse_cli(args):
+	parser = OptionParser(
+			usage="%prog [options]",
+			description=__doc__)
+	add = parser.add_option
 
-if (sys.argv[1] == 'create_branch' and len(sys.argv) == 3):
-	gitjira.createBranch(sys.argv[2])
-elif(sys.argv[1] == 'commit_branch'):
-	gitjira.commitBranch()
+	add('-b', '--create-branch', metavar='TICKET',
+		help='Create a new branch for the specified Jira ticker')
+	add('-c', '--commit-branch', action='store_true',
+		help='Commit pending changes')
+	add('--config', default=default_config_file(),
+		help='Specify a configuration file')
+
+	opts, args = parser.parse_args(args[1:])
+
+	if args:
+		parser.error("Trailing arguments")
+
+	if not (opts.commit_branch or opts.create_branch):
+		parser.error("You have to specify at least one command")
+
+	return opts
+
+
+def default_config_file():
+	xdg = os.getenv('XDG_CONFIG_HOME', os.path.expanduser('~/.config'))
+	return os.path.join(xdg, 'gitjira.conf')
+
+
+def interactive_config(filename):
+	username = read("Username:", non_empty("Username"))
+	password = read("Password:", non_empty("Password"), reader=getpass.getpass)
+	base_url = read("Jira base URL (e.g. https://jira.atlassian.net):", non_empty("URL"))
+	conf = dict(userhash=gitjira.createUserHash(username, password), base_url=base_url)
+
+	if not os.path.isdir(os.path.dirname(filename)):
+		os.makedirs(os.path.dirname(filename))
+	with open(filename, 'w') as f:
+		f.write("\n".join("=".join([k, v]) for (k, v) in conf.iteritems()))
+
+	return conf
+
+
+def read(prompt, postprocessor=lambda x: x, reader=raw_input):
+	return postprocessor(reader(prompt + ' '))
+
+def non_empty(field):
+	def fun(x):
+		if x.strip(): return x.strip()
+		raise ValueError("%s cannot be empty" % field)
+	return fun
+
+
+if __name__ == '__main__':
+	sys.exit(main(sys.argv))
+
