@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+
+import sys, os, getpass
+import gitjira
+
+from os.path import expanduser
+home = expanduser("~")
+
+def usage():
+	return "git-jira [help | <command> [<args>]]\n" + \
+	"Commands - \n" + \
+	"- create_branch <ticket_number>\n" + \
+	"- commit_branch\n"
+
+confLocation = home + "/.config/gitjira"
+confFile = confLocation + "/config"
+
+if (not os.path.exists(confFile)):
+	sys.stdout.write("Configuration required to proceed. Create config? [y/n]")
+	proceed = raw_input().lower()
+	if (proceed != 'y'):
+		sys.exit(0)
+
+	if (not os.path.exists(confLocation)):
+		os.mkdir(confLocation)
+	sys.stdout.write("Username: ")
+	username = raw_input()
+	password = getpass.getpass("Password: ")
+	sys.stdout.write("Base Jira Url (eg. http://jira.atlassian.net): ")
+	baseUrl = raw_input()
+
+	userhash = gitjira.createUserHash(username, password)
+
+	f = open(confFile, 'w')
+	f.write("userhash=" + userhash + "\n")
+	f.write("base_url=" + baseUrl)
+	f.close()
+
+if (len(sys.argv) < 2 or sys.argv[1] == 'help'):
+	print usage()
+	sys.exit(1)
+
+if (sys.argv[1] == 'create_branch' and len(sys.argv) == 3):
+	gitjira.createBranch(sys.argv[2])
+elif(sys.argv[1] == 'commit_branch'):
+	gitjira.commitBranch()
