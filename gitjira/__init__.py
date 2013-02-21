@@ -57,9 +57,8 @@ def commitBranch():
 
 	response = callJira(ticket)
 
-	key = response['key']
-	msg = response['fields']['summary']
-
+	msg = response['key'] + " - " + response['fields']['summary']
 	msg = msg + "\n#TO ABORT THIS COMMIT, DELETE THE COMMIT MESSAGE ABOVE AND SAVE THIS FILE!"
+
 	cmd = ['git', 'commit', '-m', msg, '-e']
 	subprocess.call(cmd)
