@@ -7,9 +7,9 @@ Installation
 ---------------
 #### Download
 
-##### Either clone the repo - 
+##### Either clone the repo
 ```console
-git clone git@github.com:jairamc/git-jira.git 
+git clone git@github.com:jairamc/gitjira.git
 ```
 
 ##### Or download latest tag
