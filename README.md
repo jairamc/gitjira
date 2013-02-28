@@ -42,12 +42,18 @@ export PATH=$PATH:$HOME/local/bin
 export PYTHONPATH=$HOME/local/lib/python
 ```
 
+Features
+---------------
+
+- Create branches of the format - ```<issue type>/<ticket number>``` - given just the ticket id
+- Automatically transition tickets to in-progress when you create a branch for a ticket
+- Fetch the summary of a ticket and add to commit message when committing a branch created by gitjira
 
 Usage
 ---------------
 Run 
 ```console
-prompt> gitjira help
+prompt> gitjira -h
 ```
 In the current version, branches are created in format ```<issue type>/<ticket number>```. Await improvements!
 
