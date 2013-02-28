@@ -33,7 +33,7 @@ def main(args):
 		   interactive_config(opts.config)
 
 	if opts.create_branch:
-		gitjira.createBranch(opts.create_branch, conf)
+		gitjira.createBranch(opts.create_branch, conf, opts.no_transition)
 
 	if opts.commit_branch:
 		gitjira.commitBranch(conf)
@@ -53,6 +53,8 @@ def parse_cli(args):
 		help='Commit pending changes')
 	add('--config', default=default_config_file(),
 		help='Specify a configuration file')
+	add('--no-transition', action='store_false',
+		default=True, help='Do not transition the ticket' )
 
 	opts, args = parser.parse_args(args[1:])
 

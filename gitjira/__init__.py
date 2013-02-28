@@ -23,7 +23,8 @@
 Module for creating/updating git branches based on Jira tickets
 """
 
-import urllib2, base64, sys, json, subprocess, re
+import urllib, urllib2, base64, sys, json, subprocess, re 
+import transitions
 
 def createUserHash(username, password):
 	return base64.b64encode((username + ":" + password).encode('ascii'))
@@ -42,11 +43,16 @@ def readValidateConfig(filename, keys=('base_url', 'userhash')):
 
 def callJira(ticket, config):
 	url = config['base_url'] + '/rest/api/latest/issue/' + ticket
-	#userHash = base64.b64encode((config.username+":"+config.password).encode('ascii'))
-	opener = urllib2.build_opener()
-	opener.addheaders = [('Authorization', 'Basic ' + config['userhash'])]
+	headers = {'Authorization': 'Basic ' + config['userhash'] }
+	request = urllib2.Request(url, None, headers)
+	return json.load(urllib2.urlopen(request))
 
-	return json.load(opener.open(url))
+def transitionTicket(ticket, transitionId, config):
+	data = '{"transition": {"id": "' + str(transitionId) + '" }}'
+	url = config['base_url'] + '/rest/api/latest/issue/' + ticket + '/transitions?expand=transitions.fields'
+	headers = {'Authorization': 'Basic ' + config['userhash'], 'Content-Type': 'application/json'}
+	request = urllib2.Request(url, data, headers)
+	urllib2.urlopen(request)
 
 def getBranch():
 	p = re.compile('^# On branch ([\w/-]*)')
@@ -59,7 +65,7 @@ def getBranch():
 		print "Unable to decipher branch name. Did you create this branch using git-jira tool?"
 		sys.exit(1)
 
-def createBranch(ticket, config):
+def createBranch(ticket, config, transition = True):
 	response = callJira(ticket, config)
 
 	key = response['key']
@@ -68,6 +74,9 @@ def createBranch(ticket, config):
 
 	cmd = ['git', 'checkout', '-b', branchname]
 	subprocess.check_call(cmd)
+
+	if (transition == True):
+		transitionTicket(ticket, transitions.in_progress, config)
 
 def commitBranch(config):
 	branch = getBranch()
