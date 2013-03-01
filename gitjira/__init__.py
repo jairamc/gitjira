@@ -23,8 +23,9 @@
 Module for creating/updating git branches based on Jira tickets
 """
 
-import urllib, urllib2, base64, sys, json, subprocess, re 
+import urllib2, base64, sys, json, subprocess, re, os
 import transitions
+
 
 def createUserHash(username, password):
 	return base64.b64encode((username + ":" + password).encode('ascii'))
@@ -42,17 +43,12 @@ def readValidateConfig(filename, keys=('base_url', 'userhash')):
     return data
 
 def callJira(ticket, config):
-	url = config['base_url'] + '/rest/api/latest/issue/' + ticket
-	headers = {'Authorization': 'Basic ' + config['userhash'] }
-	request = urllib2.Request(url, None, headers)
-	return json.load(urllib2.urlopen(request))
+    return json.load(jiraRequest(config, restIssue(ticket)))
 
 def transitionTicket(ticket, transitionId, config):
-	data = '{"transition": {"id": "' + str(transitionId) + '" }}'
-	url = config['base_url'] + '/rest/api/latest/issue/' + ticket + '/transitions?expand=transitions.fields'
-	headers = {'Authorization': 'Basic ' + config['userhash'], 'Content-Type': 'application/json'}
-	request = urllib2.Request(url, data, headers)
-	urllib2.urlopen(request)
+    data = json.dumps(dict(transition=dict(id=transitionId)))
+    path = restIssue(ticket, 'transitions?expand=transitions.fields')
+    return json.load(jiraRequest(config, path, data))
 
 def getBranch():
 	p = re.compile('^# On branch ([\w/-]*)')
@@ -89,3 +85,24 @@ def commitBranch(config):
 
 	cmd = ['git', 'commit', '-m', msg, '-e']
 	subprocess.call(cmd)
+
+
+def jiraRequest(config, path, data=None):
+    """Build and perform a request to the JIRA API."""
+    url = os.path.join(config['base_url'], path)
+    headers = {'Authorization': 'Basic %s' % config['userhash'],
+               'Content-Type' : 'application/json'}
+    request = urllib2.Request(url, data, headers)
+    reply = urllib2.urlopen(request)
+    if reply.getcode() >= 400:
+        raise HTTPError("Request failed with status %d, url: %s" % (reply.getcode(), url))
+    return reply
+
+def restIssue(*parts):
+    assert all(not part.startswith('/') for part in parts), "Expecting relative path"
+    return os.path.join('rest/api/latest/issue', *parts)
+
+
+class HTTPError(Exception):
+    pass
+
