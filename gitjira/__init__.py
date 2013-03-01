@@ -23,8 +23,9 @@
 Module for creating/updating git branches based on Jira tickets
 """
 
-import urllib2, base64, json, subprocess, re, os
+import urllib2, base64, json, re, os
 import transitions
+from git import Git
 
 
 def createUserHash(username, password):
@@ -52,9 +53,7 @@ def transitionTicket(ticket, transitionId, config):
 
 def getBranch():
     regex = re.compile('^\w+/[^-]+-\w+$')
-    cmd = ['git', 'status']
-    statusMsg = subprocess.check_output(cmd)
-    branch = statusMsg.split('\n')[0].split("# On branch ")[1]
+    branch = Git().status().split('\n')[0].split("# On branch ")[1]
     if not regex.match(branch):
         raise GitBranchError("Not on valid gitjira branch")
     return branch
@@ -64,10 +63,9 @@ def createBranch(ticket, config, transition = True):
 
 	key = response['key']
 	issueType = response['fields']['issuetype']['name']
-	branchname = issueType.lower() + "/" + key
+	branchName = issueType.lower() + "/" + key
 
-	cmd = ['git', 'checkout', '-b', branchname]
-	subprocess.check_call(cmd)
+	Git().branch(branchName.strip())
 
 	if (transition == True):
 		transitionTicket(ticket, transitions.in_progress, config)
@@ -78,11 +76,10 @@ def commitBranch(config):
 
 	response = callJira(ticket, config)
 
-	msg = response['key'] + " - " + response['fields']['summary']
-	msg = msg + "\n#TO ABORT THIS COMMIT, DELETE THE COMMIT MESSAGE ABOVE AND SAVE THIS FILE!"
+	msg = '%s - %s\n\n# TO ABORT THIS COMMIT, DELETE THE COMMIT MESSAGE ABOVE AND SAVE THIS FILE!' \
+			% (response['key'], response['fields']['summary'])
 
-	cmd = ['git', 'commit', '-m', msg, '-e']
-	subprocess.call(cmd)
+	Git().commit(msg)
 
 
 def jiraRequest(config, path, data=None):
