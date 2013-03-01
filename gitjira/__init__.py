@@ -23,7 +23,7 @@
 Module for creating/updating git branches based on Jira tickets
 """
 
-import urllib2, base64, sys, json, subprocess, re, os
+import urllib2, base64, json, subprocess, re, os
 import transitions
 
 
@@ -51,15 +51,13 @@ def transitionTicket(ticket, transitionId, config):
     return json.load(jiraRequest(config, path, data))
 
 def getBranch():
-	p = re.compile('^# On branch ([\w/-]*)')
-	cmd = ['git', 'status']
-	statusMsg = subprocess.check_output(cmd)
-	branches = p.findall(statusMsg)
-	if (len(branches) > 0):
-		return branches[0]
-	else:
-		print "Unable to decipher branch name. Did you create this branch using git-jira tool?"
-		sys.exit(1)
+    regex = re.compile('^\w+/[^-]+-\w+$')
+    cmd = ['git', 'status']
+    statusMsg = subprocess.check_output(cmd)
+    branch = statusMsg.split('\n')[0].split("# On branch ")[1]
+    if not regex.match(branch):
+        raise GitBranchError("Not on valid gitjira branch")
+    return branch
 
 def createBranch(ticket, config, transition = True):
 	response = callJira(ticket, config)
@@ -103,6 +101,15 @@ def restIssue(*parts):
     return os.path.join('rest/api/latest/issue', *parts)
 
 
-class HTTPError(Exception):
+class GitJiraError(Exception):
+    pass
+
+class HTTPError(GitJiraError):
+    pass
+
+class GitError(GitJiraError):
+    pass
+
+class GitBranchError(GitError):
     pass
 
