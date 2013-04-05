@@ -22,23 +22,29 @@
 #################################################################################
 
 import sys, os, getpass
-import gitjira
 
 from optparse import OptionParser
 
+import gitjira
+
+from gitjira.jira import Jira
+from gitjira.conf import Configuration
+
+
 def main(args):
-	opts = parse_cli(args)
+    opts = parse_cli(args)
 
-	conf = gitjira.readValidateConfig(opts.config) if os.path.exists(opts.config) else\
-		   interactive_config(opts.config)
+    conf = Configuration.read(opts.config) if os.path.exists(opts.config) else\
+           interactive_config(opts.config)
 
-	if opts.create_branch:
-		gitjira.createBranch(opts.create_branch, conf, opts.no_transition)
+    jira = Jira(conf)
+    if opts.create_branch:
+        gitjira.createBranch(opts.create_branch, jira, opts.transition)
 
-	if opts.commit_branch:
-		gitjira.commitBranch(conf)
+    if opts.commit_branch:
+        gitjira.commitBranch(jira)
 
-	return 0
+    return 0
 
 
 def parse_cli(args):
@@ -53,7 +59,7 @@ def parse_cli(args):
 		help='Commit pending changes')
 	add('--config', default=default_config_file(),
 		help='Specify a configuration file')
-	add('--no-transition', action='store_false',
+	add('-n', '--no-transition', action='store_false', dest='transition',
 		default=True, help='Do not transition the ticket' )
 
 	opts, args = parser.parse_args(args[1:])
@@ -76,12 +82,11 @@ def interactive_config(filename):
 	username = read("Username:", non_empty("Username"))
 	password = read("Password:", non_empty("Password"), reader=getpass.getpass)
 	base_url = read("Jira base URL (e.g. https://jira.atlassian.net):", non_empty("URL"))
-	conf = dict(userhash=gitjira.createUserHash(username, password), base_url=base_url)
+	conf = Configuration(userhash=gitjira.createUserHash(username, password), base_url=base_url)
 
 	if not os.path.isdir(os.path.dirname(filename)):
 		os.makedirs(os.path.dirname(filename))
-	with open(filename, 'w') as f:
-		f.write("\n".join("=".join([k, v]) for (k, v) in conf.iteritems()))
+	conf.write(filename)
 
 	return conf
 

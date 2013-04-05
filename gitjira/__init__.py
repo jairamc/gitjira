@@ -20,72 +20,48 @@
 #################################################################################
 
 """
-Module for creating/updating git branches based on Jira tickets
+Module for creating/updating git branches based on Jira tickets.
 """
 
-import urllib, urllib2, base64, sys, json, subprocess, re 
-import transitions
+import base64, re
+
+from git import Git
+from error import GitBranchError
+
 
 def createUserHash(username, password):
-	return base64.b64encode((username + ":" + password).encode('ascii'))
+    return base64.b64encode((username + ":" + password).encode('ascii'))
 
-def readConfig(filename, sep='='):
-    with open(filename, 'rb') as f:
-        for line in f:
-            yield [token.strip() for token in line.split(sep, 1)]
-
-def readValidateConfig(filename, keys=('base_url', 'userhash')):
-    data = dict(readConfig(filename))
-    missing = [k for k in keys if not k in data]
-    if missing:
-        raise ValueError("Fields [%s] missing from configuration file" % ', '.join(`k` for k in missing))
-    return data
-
-def callJira(ticket, config):
-	url = config['base_url'] + '/rest/api/latest/issue/' + ticket
-	headers = {'Authorization': 'Basic ' + config['userhash'] }
-	request = urllib2.Request(url, None, headers)
-	return json.load(urllib2.urlopen(request))
-
-def transitionTicket(ticket, transitionId, config):
-	data = '{"transition": {"id": "' + str(transitionId) + '" }}'
-	url = config['base_url'] + '/rest/api/latest/issue/' + ticket + '/transitions?expand=transitions.fields'
-	headers = {'Authorization': 'Basic ' + config['userhash'], 'Content-Type': 'application/json'}
-	request = urllib2.Request(url, data, headers)
-	urllib2.urlopen(request)
 
 def getBranch():
-	p = re.compile('^# On branch ([\w/-]*)')
-	cmd = ['git', 'status']
-	statusMsg = subprocess.check_output(cmd)
-	branches = p.findall(statusMsg)
-	if (len(branches) > 0):
-		return branches[0]
-	else:
-		print "Unable to decipher branch name. Did you create this branch using git-jira tool?"
-		sys.exit(1)
+    regex = re.compile('^\w+/[^-]+-\w+$')
+    branch = Git().status().split('\n')[0].split("# On branch ")[1]
+    if not regex.match(branch):
+        raise GitBranchError("Not on valid gitjira branch")
+    return branch
 
-def createBranch(ticket, config, transition = True):
-	response = callJira(ticket, config)
 
-	key = response['key']
-	issueType = response['fields']['issuetype']['name']
-	branchname = issueType.lower() + "/" + key
+def createBranch(ticket, jira, transition=True):
+    response = jira.ticket(ticket)
 
-	cmd = ['git', 'checkout', '-b', branchname]
-	subprocess.check_call(cmd)
+    key = response['key']
+    issueType = response['fields']['issuetype']['name']
+    branchName = '%s/%s' % (issueType.lower(), key)
 
-	if (transition == True):
-		transitionTicket(ticket, transitions.in_progress, config)
+    Git().branch(branchName)
 
-def commitBranch(config):
-	branch = getBranch()
-	ticket = branch.split('/')[1]
+    if transition:
+        jira.mark_in_progress(ticket)
 
-	response = callJira(ticket, config)
 
-	msg = response['key'] + " - " + response['fields']['summary']
-	msg = msg + "\n#TO ABORT THIS COMMIT, DELETE THE COMMIT MESSAGE ABOVE AND SAVE THIS FILE!"
+def commitBranch(jira):
+    branch = getBranch()
+    ticket = branch.split('/')[1]
 
-	cmd = ['git', 'commit', '-m', msg, '-e']
-	subprocess.call(cmd)
+    response = jira.ticket(ticket)
+
+    msg = '%s - %s\n\n# TO ABORT THIS COMMIT, DELETE THE COMMIT MESSAGE ABOVE AND SAVE THIS FILE!' \
+            % (response['key'], response['fields']['summary'])
+
+    Git().commit(msg)
+
