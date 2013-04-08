@@ -1,6 +1,6 @@
 #################################################################################
 #
-#    Copyright 2013 Jairam Chandar
+#    Copyright 2013 Jairam Chandar & Michael Pitidis
 #  
 #    This file is part of GitJira.
 #
