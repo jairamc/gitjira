@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Gitjira by jairamc</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Gitjira</h1>
+        <p>Script to create a branch based on a Jira ticket</p>
+
+        <p class="view"><a href="https://github.com/jairamc/gitjira">View the Project on GitHub <small>jairamc/gitjira</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/jairamc/gitjira/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/jairamc/gitjira/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/jairamc/gitjira">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<h3>
+<a id="download" class="anchor" href="#download" aria-hidden="true"><span class="octicon octicon-link"></span></a>Download</h3>
+
+<h5>
+<a id="either-clone-the-repo" class="anchor" href="#either-clone-the-repo" aria-hidden="true"><span class="octicon octicon-link"></span></a>Either clone the repo</h5>
+
+<div class="highlight highlight-console"><pre><span class="pl-mo">git clone git@github.com:jairamc/gitjira.git</span></pre></div>
+
+<h5>
+<a id="or-download-latest-tag" class="anchor" href="#or-download-latest-tag" aria-hidden="true"><span class="octicon octicon-link"></span></a>Or download latest tag</h5>
+
+<div class="highlight highlight-console"><pre><span class="pl-mo">tar -xvzf git-jira.tar.gz</span></pre></div>
+
+<p>or</p>
+
+<div class="highlight highlight-console"><pre><span class="pl-mo">unzip git-jira.zip</span></pre></div>
+
+<h3>
+<a id="install-the-package" class="anchor" href="#install-the-package" aria-hidden="true"><span class="octicon octicon-link"></span></a>Install the package</h3>
+
+<h5>
+<a id="global-install" class="anchor" href="#global-install" aria-hidden="true"><span class="octicon octicon-link"></span></a>Global install</h5>
+
+<div class="highlight highlight-console"><pre><span class="pl-mo">cd &lt;path-to-code&gt;</span>
+<span class="pl-mo">python setup.py install</span></pre></div>
+
+<p>The last step needs to be run as root if you want to install gitjira for all users. If you prefer a local installation — which is recommended at present, since there is no simple way to uninstall it — you can instead run the following commands as a user:</p>
+
+<h5>
+<a id="local-install" class="anchor" href="#local-install" aria-hidden="true"><span class="octicon octicon-link"></span></a>Local Install</h5>
+
+<div class="highlight highlight-console"><pre><span class="pl-mo">cd &lt;path-to-code&gt;</span>
+<span class="pl-mo">python setup.py install --home=~/local</span></pre></div>
+
+<p>installing locally will require the below steps as well </p>
+
+<div class="highlight highlight-console"><pre><span class="pl-mo">export PATH=$PATH:$HOME/local/bin</span>
+<span class="pl-mo">export PYTHONPATH=$HOME/local/lib/python</span></pre></div>
+
+<h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>Create branches of the format - <code>&lt;issue type&gt;/&lt;ticket number&gt;</code> - given just the ticket id</li>
+<li>Automatically transition tickets to in-progress when you create a branch for a ticket</li>
+<li>Fetch the summary of a ticket and add to commit message when committing a branch created by gitjira</li>
+</ul>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>Run </p>
+
+<div class="highlight highlight-console"><pre><span class="pl-mo">prompt&gt; gitjira -h</span></pre></div>
+
+<p>In the current version, branches are created in format <code>&lt;issue type&gt;/&lt;ticket number&gt;</code>. Await improvements!</p>
+
+<h5>
+<a id="special-thanks-to-michael-pitidis-mpitid-for-his-help" class="anchor" href="#special-thanks-to-michael-pitidis-mpitid-for-his-help" aria-hidden="true"><span class="octicon octicon-link"></span></a>Special thanks to Michael Pitidis (<a href="https://github.com/mpitid" class="user-mention">@mpitid</a>) for his help.</h5>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/jairamc">jairamc</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
